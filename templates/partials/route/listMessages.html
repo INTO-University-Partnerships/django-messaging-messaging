@@ -1,0 +1,67 @@
+{% load i18n %}
+
+<div id="id_list_messages">
+
+    <h2>{% trans 'Your inbox' %}</h2>
+
+    {# begin alerts #}
+    <alerts messages="messages"></alerts>
+    {# end alerts #}
+
+    {# begin buttons #}
+    <div id="id_buttons">
+        <a href="#/compose" class="btn btn-default"><span class="glyphicon glyphicon-plus-sign"></span>&nbsp;{% trans 'New message' %}</a>
+        <div class="pull-right">
+            <button type="button" class="btn btn-default" ng-click="setSort('sender')">
+                <span ng-class="{'glyphicon': sort.sender, 'glyphicon-arrow-up': sort.senderAsc, 'glyphicon-arrow-down': sort.senderDesc}"></span>&nbsp;{% trans 'Sender' %}
+            </button>
+            <button type="button" class="btn btn-default" ng-click="setSort('date')">
+                <span ng-class="{'glyphicon': sort.date, 'glyphicon-arrow-up': sort.dateAsc, 'glyphicon-arrow-down': sort.dateDesc}"></span>&nbsp;{% trans 'Date' %}
+            </button>
+        </div>
+    </div>
+    {# end buttons #}
+
+    {# begin list of inbox messages #}
+    <div>
+        <div class="list-group">
+            {% verbatim %}
+                <a ng-repeat="email in inbox" ng-href="#/read/{{ email.id }}" class="list-group-item">
+                    <span class="badge">{{ email.sent }}</span>
+                    <h4 class="list-group-item-heading">
+                        <span ng-if="showMessageItemIds">{{ email.id }}</span>
+                        <span ng-if="email.unread == 0">{{ email.sender }}</span>
+                        <strong ng-if="email.unread > 0">{{ email.sender }}</strong>
+                    </h4>
+                    <p class="list-group-item-text" ng-if="email.unread == 0">
+                        <span class="glyphicon glyphicon-folder-open"></span>
+                        <span ng-if="email.count > 1">&nbsp;&#40;{{ email.count }}&#41;</span>
+                        <span ng-if="email.count < 2">&nbsp;</span>
+                        <span>{{ email.subject }}</span>
+                    </p>
+                    <p class="list-group-item-text" ng-if="email.unread > 0">
+                        <span class="glyphicon glyphicon-folder-close"></span>
+                        <strong ng-if="email.count > 1">&nbsp;&#40;{{ email.count }}&#41;</strong>
+                        <strong ng-if="email.count < 2">&nbsp;</strong>
+                        <strong>{{ email.subject }}</strong>
+                    </p>
+                </a>
+            {% endverbatim %}
+        </div>
+    </div>
+    {# end list of inbox messages #}
+
+    {# begin pagination #}
+    <div id="id_pagination">
+        {% verbatim %}
+            <pagination per-page="{{ perPage }}"
+                        current-page="currentPage"
+                        total="total"
+                        fetch-page="getPageOfInbox(currentPage)"
+                        ng-show="total > perPage">
+            </pagination>
+        {% endverbatim %}
+    </div>
+    {# end pagination #}
+
+</div>

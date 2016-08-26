@@ -1,0 +1,3 @@
+{% load i18n %}
+{# Translators: Messaging app email subject #}
+{% trans 'You have a new message' %}

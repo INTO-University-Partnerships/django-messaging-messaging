@@ -1,0 +1,115 @@
+{% load i18n %}
+
+<div id="id_compose_message">
+
+    <h2 ng-if="newMessage">{% trans 'New message' %}</h2>
+    <h2 ng-if="replyTo">{% trans 'Replying to' %}&nbsp;{% verbatim %}{{ replyTo }}{% endverbatim %}</h2>
+
+    {# begin alerts #}
+    <alerts messages="messages"></alerts>
+    {# end alerts #}
+
+    {# begin buttons #}
+    <div id="id_buttons">
+        <a href="#/" class="btn btn-default" ng-if="!msg.miid">
+            <span class="glyphicon glyphicon-circle-arrow-left"></span>&nbsp;{% trans 'Back to inbox' %}
+        </a>
+        <a href="#/read/{% verbatim %}{{ msg.miid }}{% endverbatim %}" class="btn btn-default" ng-if="msg.miid">
+            <span class="glyphicon glyphicon-circle-arrow-left"></span>&nbsp;{% trans 'Back to conversation' %}
+        </a>
+    </div>
+    {# end buttons #}
+
+    {# begin form #}
+    <form class="form-horizontal" role="form">
+
+        {# begin send to #}
+        <div class="form-group">
+            <label for="id_send_to" class="col-sm-2 control-label">{% trans 'To' %}</label>
+            <div class="col-sm-10">
+                <input type="text"
+                       class="form-control"
+                       id="id_send_to"
+                       placeholder="{% trans 'Search for a recipient' %}"
+                       ng-trim
+                       ng-model="sendTo"
+                       ng-keyup="sendToKeyUp()"
+                       ng-disabled="msg.targetAll"/>
+                <div id="id_send_to_choices" class="list-group" ng-if="sendToChoices.length > 0">
+                    <a href="javascript:;" class="list-group-item" ng-repeat="choice in sendToChoices" ng-click="addRecipient(choice)">
+                        <span>{% verbatim %}{{ choice.name }}{% endverbatim %}</span>
+                    </a>
+                </div>
+                <span class="help-block" ng-show="!searching && sendToChoices && sendToChoicesCount > sendToChoicesMax">
+                    {% verbatim %}{{ sendToChoicesCount }}{% endverbatim %}&nbsp;{% trans 'possible recipients match' %}
+                    &ldquo;{% verbatim %}{{ sendTo }}{% endverbatim %}&rdquo;&period;
+                    {% trans 'Showing the first' %}&nbsp;{% verbatim %}{{ sendToChoicesMax }}{% endverbatim %}&period;
+                </span>
+            </div>
+        </div>
+        {# end send to #}
+
+        {# begin list of recipients #}
+        <div class="form-group" ng-if="msg.recipients.length > 0">
+            <label class="col-sm-2 control-label">{% trans 'Recipients' %}</label>
+            <div class="col-sm-10">
+                <span ng-repeat="recipient in msg.recipients">
+                    <button type="button" class="btn btn-default recipient" ng-click="removeRecipient(recipient)" ng-disabled="isSender(recipient)">
+                        {% verbatim %}{{ recipient.name }}{% endverbatim %}&nbsp;<span class="glyphicon glyphicon-remove" ng-if="!isSender(recipient)"></span>
+                    </button>
+                </span>
+            </div>
+        </div>
+        {# end list of recipients #}
+
+        {# begin target all #}
+        <div class="form-group" ng-if="isSuperUser">
+            <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" ng-model="msg.targetAll" ng-change="targetAllChanged()"/>&nbsp;{% trans 'Send to everyone' %}
+                    </label>
+                </div>
+            </div>
+        </div>
+        {# end target all #}
+
+        {# begin subject #}
+        <div class="form-group">
+            <label for="id_subject" class="col-sm-2 control-label">{% trans 'Subject' %}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="id_subject" placeholder="{% trans 'Subject' %}" ng-trim ng-model="msg.subject"/>
+            </div>
+        </div>
+        {# end subject #}
+
+        {# begin body #}
+        <div class="form-group">
+            <label for="id_body" class="col-sm-2 control-label">{% trans 'Body' %}</label>
+            <div class="col-sm-10">
+                <blockquote ng-if="replyBody">
+                    <p ng-bind-html="replyBody"></p>
+                </blockquote>
+                <textarea class="form-control" id="id_body" placeholder="{% trans 'Body' %}" rows="10" ng-trim ng-model="msg.body"/>
+            </div>
+        </div>
+        {# end body #}
+
+        {# begin buttons #}
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <a href="#/" ng-if="!msg.miid">{% trans 'Cancel' %}&nbsp;</a>
+                <a href="#/read/{% verbatim %}{{ msg.miid }}{% endverbatim %}" ng-if="msg.miid">{% trans 'Cancel' %}&nbsp;</a>
+                <button type="button"
+                        class="btn btn-default"
+                        ng-disabled="!((msg.recipients.length > 0 || msg.targetAll) && (msg.subject.length > 0 || msg.body.length > 0))"
+                        ng-click="sendMessage()">{% trans 'Send' %}
+                </button>
+            </div>
+        </div>
+        {# end buttons #}
+
+    </form>
+    {# end form #}
+
+</div>

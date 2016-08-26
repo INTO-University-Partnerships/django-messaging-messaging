@@ -1,0 +1,14 @@
+{% load i18n %}{% autoescape off %}{% for message in messages %}{% if forloop.first %}{{ message.subject }}
+{# This line and the next are deliberately blank so there's a break between the subject and the conversation #}
+
+{% endif %}{{ message.user.first_name }} {{ message.user.last_name }}
+{# This line is deliberately blank so there's a break between the user's first and last names and the body #}
+{{ message.body }}
+{# This line and the next are deliberately blank so there's a break between each message in the conversation #}
+
+{% endfor %}{% endautoescape %}
+
+{# Translators: Messaging app email body link to conversation/thread #}
+{% trans 'Click the link to read the conversation:' %}
+{# This line is deliberately blank so there's a break between before the link #}
+{{ wwwroot }}{{ link }}

@@ -1,0 +1,17 @@
+{% load i18n %}
+
+<div class="modal fade" id="{% verbatim %}{{ uid }}{% endverbatim %}" tabindex="-1" role="dialog" aria-labelledby="label_{% verbatim %}{{ uid }}{% endverbatim %}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="label_{% verbatim %}{{ uid }}{% endverbatim %}">{% verbatim %}{{ title }}{% endverbatim %}</h4>
+            </div>
+            <div class="modal-body"><p>{% verbatim %}{{ body }}{% endverbatim %}</p></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" ng-click="cancel({uid: uid})" data-dismiss="modal">{% trans 'No' %}</button>
+                <button type="button" class="btn btn-primary" ng-click="confirm({uid: uid})">{% trans 'Yes' %}</button>
+            </div>
+        </div>
+    </div>
+</div>

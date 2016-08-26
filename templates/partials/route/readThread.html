@@ -1,0 +1,77 @@
+{% load i18n %}
+
+<div id="id_read_thread">
+
+    <h2>{% verbatim %}{{ subject }}{% endverbatim %}</h2>
+
+    {# begin alerts #}
+    <alerts messages="messages"></alerts>
+    {# end alerts #}
+
+    {# begin buttons #}
+    <div id="id_buttons">
+        <a href="#/" class="btn btn-default"><span class="glyphicon glyphicon-circle-arrow-left"></span>&nbsp;{% trans 'Back to inbox' %}</a>
+    </div>
+    {# end buttons #}
+
+    {# begin list of thread messages #}
+    <div>
+        <ul class="list-group">
+            <li ng-repeat="email in thread" class="list-group-item">
+                {% verbatim %}
+                    <span class="badge">{{ email.sent }}</span>
+                    <h4 class="list-group-item-heading">
+                        <span ng-if="showMessageItemIds">{{ email.id }}</span>
+                        <span ng-if="isRead(email)">{{ email.sender }}</span>
+                        <strong ng-if="!isRead(email)">{{ email.sender }}</strong>
+                    </h4>
+                {% endverbatim %}
+                <div>
+                    <div class="pull-left">
+                        {% verbatim %}
+                            <p class="list-group-item-text subject" ng-if="!email.body || (email.subject && email.subject != subject)">
+                                <em ng-if="isRead(email)">{{ email.subject }}</em>
+                                <em ng-if="!isRead(email)"><strong>{{ email.subject }}</strong></em>
+                            </p>
+                            <p class="list-group-item-text" ng-bind-html="email.body" ng-if="email.body"></p>
+                        {% endverbatim %}
+                    </div>
+                    <div class="pull-right">
+                        <a href="#/reply/{% verbatim %}{{ email.id }}{% endverbatim %}" class="reply btn btn-default btn-sm">
+                            <span class="glyphicon glyphicon-share-alt"></span>&nbsp;{% trans 'Reply' %}
+                        </a>
+                        <button type="button" class="btn btn-default btn-sm" ng-click="openModal('modal_delete_one', email.id)">
+                            <span class="glyphicon glyphicon-trash"></span>&nbsp;{% trans 'Delete' %}
+                        </button>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </li>
+        </ul>
+    </div>
+    {# end list of thread messages #}
+
+    {# begin buttons #}
+    <div>
+        <button type="button" class="btn btn-default" ng-if="total" ng-click="openModal('modal_delete_all')">
+            <span class="glyphicon glyphicon-trash"></span>&nbsp;{% trans 'Delete all' %}
+        </button>
+    </div>
+    {# end buttons #}
+
+    {# begin confirmation modals #}
+        <modal-confirm uid="modal_delete_one"
+                       title="{% trans 'Delete message' %}"
+                       body="{% trans 'Are you sure you want to delete this message?' %}"
+                       cancel="cancelDeleteMessage(uid)"
+                       confirm="deleteOne(uid)">
+        </modal-confirm>
+        <modal-confirm uid="modal_delete_all"
+                       title="{% trans 'Delete conversation' %}"
+                       body="{% trans 'Are you sure you want to delete this conversation?' %}"
+                       cancel="cancelDeleteMessage(uid)"
+                       confirm="deleteAll(uid)">
+        </modal-confirm>
+    {# end confirmation modals #}
+
+</div>

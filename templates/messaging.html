@@ -1,0 +1,40 @@
+{% extends 'page.html' %}
+{% load i18n sekizai_tags %}
+
+{% block content %}
+
+    {% addtoblock 'css' %}
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/messaging/messages.min.css"/>
+    {% endaddtoblock %}
+
+    {% addtoblock 'js' %}
+        <script>
+            CONFIG = {
+                trans: {
+                    {% for p in trans %}
+                    '{{ p.0 }}': '{% trans p.1 %}'{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                },
+                minSearchChars: 2,
+                isSuperUser: {% if user.is_superuser %}true{% else %}false{% endif %},
+                showMessageItemIds: {% if show_message_item_ids %}true{% else %}false{% endif %}
+            };
+        </script>
+    {% endaddtoblock %}
+
+    {% addtoblock 'js' %}
+        {% if angularjs_debug %}
+            <script src="{{ STATIC_URL }}js/components/angular/angular.js"></script>
+            <script src="{{ STATIC_URL }}js/components/angular-route/angular-route.js"></script>
+            <script src="{{ STATIC_URL }}js/components/angular-sanitize/angular-sanitize.js"></script>
+        {% else %}
+            <script src="{{ STATIC_URL }}js/components/angular/angular.min.js"></script>
+            <script src="{{ STATIC_URL }}js/components/angular-route/angular-route.min.js"></script>
+            <script src="{{ STATIC_URL }}js/components/angular-sanitize/angular-sanitize.min.js"></script>
+        {% endif %}
+        <script src="{{ STATIC_URL }}js/build/app/messaging/messaging{% if not JS_DEBUG %}.min{% endif %}.js"></script>
+    {% endaddtoblock %}
+
+    <div ng-app="messagingApp" ng-view ng-cloak></div>
+
+{% endblock %}
