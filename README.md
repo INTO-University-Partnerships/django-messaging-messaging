@@ -4,4 +4,4 @@ A Django app that exposes a Django-CMS CMS app and Django-CMS CMS plugin. The CM
 
 One third of a trio of plugins that also includes [the Django vle plugin](https://github.com/INTO-University-Partnerships/django-messaging-vle) and [the Moodle local messaging plugin](https://github.com/INTO-University-Partnerships/local-messaging).
 
-Also see [here]().
+Also see [here](https://github.com/INTO-University-Partnerships/vagrant).
