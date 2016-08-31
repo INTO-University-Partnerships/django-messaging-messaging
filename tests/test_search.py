@@ -105,6 +105,13 @@ class GetGroupsFilterTestCase(TestCase):
     group002 = '002'
 
     def setUp(self):
+        # some courses
+        l = [
+            (self.course001, 'Course One (Maths)'),
+            (self.course002, 'Course Two (Physics)'),
+        ]
+        list(map(lambda p: CourseKVStore.objects.create(vle_course_id=p[0], name=p[1]), l))
+
         # some groups
         l = [
             (self.course001, self.group001, 'Group One'),
@@ -150,7 +157,7 @@ class GetGroupsFilterTestCase(TestCase):
         (groups, count, _max) = search(q='Group', exclude=excludes, user=self.admin)
         self.assertEqual(1, count)
         self.assertDictEqual({
-            'name': 'Group Two (Group)',
+            'name': 'Course Two (Physics) - Group Two (Group)',
             'id': delimiter.join([self.course002, self.group002]),
             'type': u'g'
         }, groups[0])
@@ -167,6 +174,14 @@ class SearchGroupsTestCase(TestCase):
     group003 = 'g003'
 
     def setUp(self):
+        # some courses
+        l = [
+            (self.course001, 'Course One (Maths)'),
+            (self.course002, 'Course Two (Physics)'),
+            (self.course003, 'Course Three (Maths)'),
+        ]
+        list(map(lambda p: CourseKVStore.objects.create(vle_course_id=p[0], name=p[1]), l))
+
         # some groups
         l = [
             (self.course001, self.group001, 'Group One'),
@@ -227,7 +242,7 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q='Group Two', user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
-            'name': 'Group Two (Group)',
+            'name': 'Course One (Maths) - Group Two (Group)',
             'id': delimiter.join([self.course001, self.group002]),
             'type': u'g'
         }, groups[0])
@@ -236,7 +251,7 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q=self.group002, user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
-            'name': 'Group Two (Group)',
+            'name': 'Course One (Maths) - Group Two (Group)',
             'id': delimiter.join([self.course001, self.group002]),
             'type': u'g'
         }, groups[0])
@@ -245,7 +260,7 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q=self.course002, user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course Two (Physics) - Group One (Group)',
             'id': delimiter.join([self.course002, self.group001]),
             'type': u'g'
         }, groups[0])
@@ -257,12 +272,12 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q='Group One', user=self.user)
         self.assertEqual(2, count)
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course One (Maths) - Group One (Group)',
             'id': delimiter.join([self.course001, self.group001]),
             'type': u'g'
         }, groups[0])
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course Two (Physics) - Group One (Group)',
             'id': delimiter.join([self.course002, self.group001]),
             'type': u'g'
         }, groups[1])
@@ -271,12 +286,12 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q=self.group001, user=self.user)
         self.assertEqual(2, count)
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course One (Maths) - Group One (Group)',
             'id': delimiter.join([self.course001, self.group001]),
             'type': u'g'
         }, groups[0])
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course Two (Physics) - Group One (Group)',
             'id': delimiter.join([self.course002, self.group001]),
             'type': u'g'
         }, groups[1])
@@ -299,7 +314,7 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q='Group One', exclude=[g], user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course Two (Physics) - Group One (Group)',
             'id': delimiter.join([self.course002, self.group001]),
             'type': u'g'
         }, groups[0])
@@ -316,7 +331,7 @@ class SearchGroupsTestCase(TestCase):
         (groups, count, _max) = search(q='Group One', exclude=[g1, g2], user=self.admin)
         self.assertEqual(1, count)
         self.assertDictEqual({
-            'name': 'Group One (Group)',
+            'name': 'Course Three (Maths) - Group One (Group)',
             'id': delimiter.join([self.course003, self.group001]),
             'type': u'g'
         }, groups[0])

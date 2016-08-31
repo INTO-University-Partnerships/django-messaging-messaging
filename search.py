@@ -93,10 +93,13 @@ def _search_groups(q, exclude, user, _max):
     if exclude_ids:
         g = g.exclude(GroupMember.get_groups_filter(exclude_ids))
 
+    # create a map of vle_course_id to course names
+    courses = dict(CourseKVStore.objects.filter(vle_course_id__in=[grp.vle_course_id for grp in g]).values_list('vle_course_id', 'name').distinct())
+
     # return a list of groups and a (total) count
     return [
         {
-            u'name': u''.join([group.name, u' (', _('Group'), u')']),
+            u'name': u''.join([courses.get(group.vle_course_id, ''), ' - ', group.name, u' (', _('Group'), u')']),
             u'id': delimiter.join([group.vle_course_id, group.vle_group_id]),
             u'type': u'g'
         }
