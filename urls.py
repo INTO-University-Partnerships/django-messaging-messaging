@@ -1,8 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
+from .views import read, messaging
 
-urlpatterns = patterns(
-    '',
-    url(r'^read/message/(?P<message_id>\d+)/$', 'messaging.views.read', name='read_message'),
-    url(r'^$', 'messaging.views.messaging', name='messaging_home'),
-)
+urlpatterns = [
+    url(r'^read/message/(?P<message_id>\d+)/$', read, name='read_message'),
+    url(r'^$', messaging, name='messaging_home'),
+]
