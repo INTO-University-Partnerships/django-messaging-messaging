@@ -70,6 +70,7 @@ class SearchRecipientAndSendMessageTestCase(TestCase):
         login_successful = self.client.login(username=username, password=self.password)
         self.assertTrue(login_successful)
 
+    @override_settings(MESSAGING_SEARCH_RESULTS_PER_PAGE=8)
     def test_search_recipient(self):
         self.login('cersei.lannister')
 
@@ -86,7 +87,7 @@ class SearchRecipientAndSendMessageTestCase(TestCase):
         # check the JSON
         data = json.loads(force_str(response.content))
         self.assertEqual(1, data.get('count', 0))
-        self.assertEqual(10, data.get('max', 0))
+        self.assertEqual(8, data.get('perPage', 0))
         self.assertListEqual([
             {
                 u'id': self.users['Jaime'].id,
@@ -95,6 +96,7 @@ class SearchRecipientAndSendMessageTestCase(TestCase):
             }
         ], data.get('searchResults', []))
 
+    @override_settings(MESSAGING_SEARCH_RESULTS_PER_PAGE=7)
     def test_search_recipient_as_superuser(self):
         self.login('admin')
 
@@ -111,7 +113,7 @@ class SearchRecipientAndSendMessageTestCase(TestCase):
         # check the JSON
         data = json.loads(force_str(response.content))
         self.assertEqual(len(self.users), data.get('count', 0))
-        self.assertEqual(10, data.get('max', 0))
+        self.assertEqual(7, data.get('perPage', 0))
 
     @patch('messaging.models.send_mass_mail')
     def test_send_message(self, mock_send_mass_mail):

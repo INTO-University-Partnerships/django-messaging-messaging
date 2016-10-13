@@ -1,5 +1,6 @@
 from operator import itemgetter
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.db import connection
@@ -9,10 +10,7 @@ from vle.models import CourseKVStore, GroupKVStore, GroupMember, CourseMember
 from .models import delimiter
 
 
-max_search_results = 10
-
-
-def search(q='', exclude=None, user=None, _max=max_search_results):
+def search(q='', exclude=None, user=None, per_page=None, page=0):
     """
     search users, groups and courses
     """
@@ -23,17 +21,22 @@ def search(q='', exclude=None, user=None, _max=max_search_results):
     if user is None:
         return [], 0
 
-    (users, users_count) = _search_users(q=q, exclude=exclude, user=user, _max=_max)
-    (groups, groups_count) = _search_groups(q=q, exclude=exclude, user=user, _max=_max)
-    (courses, courses_count) = _search_courses(q=q, exclude=exclude, user=user, _max=_max)
+    if per_page is None:
+        per_page = settings.MESSAGING_SEARCH_RESULTS_PER_PAGE if hasattr(settings, 'MESSAGING_SEARCH_RESULTS_PER_PAGE') else 10
+
+    (users, users_count) = _search_users(q=q, exclude=exclude, user=user)
+    (groups, groups_count) = _search_groups(q=q, exclude=exclude, user=user)
+    (courses, courses_count) = _search_courses(q=q, exclude=exclude, user=user)
 
     total = sorted(users + groups + courses, key=itemgetter('name'))
     total_count = users_count + groups_count + courses_count
+    index_from = per_page * page
+    index_to = index_from + per_page
 
-    return total[:_max], total_count, _max
+    return total[index_from:index_to], total_count, per_page
 
 
-def _search_users(q, exclude, user, _max):
+def _search_users(q, exclude, user):
     """
     search users by first_name, last_name, username and email according to the given query
     if the given user is not a super user, restrict visibility of (other) users according to the given user's courses
@@ -65,11 +68,11 @@ def _search_users(q, exclude, user, _max):
             u'id': user.pk,
             u'type': u'u'
         }
-        for user in u[:_max]
+        for user in u
     ], u.count()
 
 
-def _search_groups(q, exclude, user, _max):
+def _search_groups(q, exclude, user):
     """
     search groups by vle_course_id, vle_group_id and name according to the given query
     if the given user is not a super user, restrict visibility of groups according to the given user's groups
@@ -103,11 +106,11 @@ def _search_groups(q, exclude, user, _max):
             u'id': delimiter.join([group.vle_course_id, group.vle_group_id]),
             u'type': u'g'
         }
-        for group in g[:_max]
+        for group in g
     ], g.count()
 
 
-def _search_courses(q, exclude, user, _max):
+def _search_courses(q, exclude, user):
     """
     search courses by vle_course_id and name according to the given query
     if the given user is not a super user, restrict visibility of courses according to the given user's courses
@@ -137,7 +140,7 @@ def _search_courses(q, exclude, user, _max):
             u'id': course.vle_course_id,
             u'type': u'c'
         }
-        for course in c[:_max]
+        for course in c
     ], c.count()
 
 

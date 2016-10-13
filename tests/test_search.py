@@ -33,12 +33,12 @@ class SearchUsersTestCase(TestCase):
         )
 
     def test_search_no_results(self):
-        (users, count, _max) = search(q='lanx', user=self.admin)
+        (users, count, _) = search(q='lanx', user=self.admin)
         self.assertEqual(0, count)
         self.assertListEqual([], users)
 
     def test_search_one_result(self):
-        (users, count, _max) = search(q='cersei', user=self.admin)
+        (users, count, _) = search(q='cersei', user=self.admin)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': ' '.join([self.users['Cersei'].first_name, self.users['Cersei'].last_name]),
@@ -47,7 +47,7 @@ class SearchUsersTestCase(TestCase):
         }, users[0])
 
     def test_search_two_results(self):
-        (users, count, _max) = search(q='ty', user=self.admin)
+        (users, count, _) = search(q='ty', user=self.admin)
         self.assertEqual(2, count)
         self.assertDictEqual({
             'name': ' '.join([self.users['Tyrion'].first_name, self.users['Tyrion'].last_name]),
@@ -61,21 +61,21 @@ class SearchUsersTestCase(TestCase):
         }, users[1])
 
     def test_search_many_results(self):
-        (users, count, _max) = search(q='lannister', user=self.admin)
+        (users, count, _) = search(q='lannister', user=self.admin)
         self.assertEqual(len(self.users), count)
 
     def test_search_result_count_exceeds_max(self):
-        (users, count, _max) = search(q='lannister', user=self.admin, _max=5)
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=5)
         self.assertEqual(5, len(users))
         self.assertEqual(6, count)
-        self.assertEqual(5, _max)
+        self.assertEqual(5, per_page)
 
     def test_search_with_single_exclude(self):
         tyrion = {
             'id': self.users['Tyrion'].id,
             'type': u'u'
         }
-        (users, count, _max) = search(q='ty', exclude=[tyrion], user=self.admin)
+        (users, count, _) = search(q='ty', exclude=[tyrion], user=self.admin)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': ' '.join([self.users['Tywin'].first_name, self.users['Tywin'].last_name]),
@@ -92,8 +92,65 @@ class SearchUsersTestCase(TestCase):
             'id': self.users['Tywin'].id,
             'type': u'u'
         }
-        (users, count, _max) = search(q='lannister', exclude=[tyrion, tywin], user=self.admin)
+        (users, count, _) = search(q='lannister', exclude=[tyrion, tywin], user=self.admin)
         self.assertEqual(len(self.users) - 2, count)
+
+    def test_search_with_pagination_two_per_page(self):
+        # page 0
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=2, page=0)
+        self.assertEqual(6, count)
+        self.assertEqual(2, len(users))
+        self.assertEqual(2, per_page)
+        self.assertEqual('Cersei Lannister', users[0]['name'])
+        self.assertEqual('Jaime Lannister', users[1]['name'])
+
+        # page 1
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=2, page=1)
+        self.assertEqual(6, count)
+        self.assertEqual(2, len(users))
+        self.assertEqual(2, per_page)
+        self.assertEqual('Kevan Lannister', users[0]['name'])
+        self.assertEqual('Lancel Lannister', users[1]['name'])
+
+        # page 2
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=2, page=2)
+        self.assertEqual(6, count)
+        self.assertEqual(2, len(users))
+        self.assertEqual(2, per_page)
+        self.assertEqual('Tyrion Lannister', users[0]['name'])
+        self.assertEqual('Tywin Lannister', users[1]['name'])
+
+    def test_search_with_pagination_four_per_page(self):
+        # page 0
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=4, page=0)
+        self.assertEqual(6, count)
+        self.assertEqual(4, len(users))
+        self.assertEqual(4, per_page)
+        self.assertEqual('Cersei Lannister', users[0]['name'])
+        self.assertEqual('Jaime Lannister', users[1]['name'])
+        self.assertEqual('Kevan Lannister', users[2]['name'])
+        self.assertEqual('Lancel Lannister', users[3]['name'])
+
+        # page 1
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=4, page=1)
+        self.assertEqual(6, count)
+        self.assertEqual(2, len(users))
+        self.assertEqual(4, per_page)
+        self.assertEqual('Tyrion Lannister', users[0]['name'])
+        self.assertEqual('Tywin Lannister', users[1]['name'])
+
+    def test_search_with_pagination_ten_per_page(self):
+        # page 0
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=10, page=0)
+        self.assertEqual(6, count)
+        self.assertEqual(6, len(users))
+        self.assertEqual(10, per_page)
+
+        # page 1 (empty, because only 6 users)
+        (users, count, per_page) = search(q='lannister', user=self.admin, per_page=10, page=1)
+        self.assertEqual(6, count)
+        self.assertEqual(0, len(users))
+        self.assertEqual(10, per_page)
 
 
 class GetGroupsFilterTestCase(TestCase):
@@ -154,7 +211,7 @@ class GetGroupsFilterTestCase(TestCase):
                 'type': u'g'
             },
         ]
-        (groups, count, _max) = search(q='Group', exclude=excludes, user=self.admin)
+        (groups, count, _) = search(q='Group', exclude=excludes, user=self.admin)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course Two (Physics) - Group Two (Group)',
@@ -221,17 +278,17 @@ class SearchGroupsTestCase(TestCase):
         list(map(lambda p: GroupMember.objects.create(user=self.user, vle_course_id=p[0], vle_group_id=p[1]), l))
 
     def test_search_no_results_against_name(self):
-        (groups, count, _max) = search(q='Group Three', user=self.user)
+        (groups, count, _) = search(q='Group Three', user=self.user)
         self.assertEqual(0, count)
         self.assertListEqual([], groups)
 
     def test_search_no_results_against_vle_group_id(self):
-        (groups, count, _max) = search(q=self.group003, user=self.user)
+        (groups, count, _) = search(q=self.group003, user=self.user)
         self.assertEqual(0, count)
         self.assertListEqual([], groups)
 
     def test_search_no_results_against_vle_course_id(self):
-        (groups, count, _max) = search(q=self.course003, user=self.user)
+        (groups, count, _) = search(q=self.course003, user=self.user)
         self.assertEqual(0, count)
         self.assertListEqual([], groups)
 
@@ -239,7 +296,7 @@ class SearchGroupsTestCase(TestCase):
         """
         there are three groups entitled "Group Two" of which Sansa Stark is in one
         """
-        (groups, count, _max) = search(q='Group Two', user=self.user)
+        (groups, count, _) = search(q='Group Two', user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course One (Maths) - Group Two (Group)',
@@ -248,7 +305,7 @@ class SearchGroupsTestCase(TestCase):
         }, groups[0])
 
     def test_search_one_result_against_vle_group_id(self):
-        (groups, count, _max) = search(q=self.group002, user=self.user)
+        (groups, count, _) = search(q=self.group002, user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course One (Maths) - Group Two (Group)',
@@ -257,7 +314,7 @@ class SearchGroupsTestCase(TestCase):
         }, groups[0])
 
     def test_search_one_result_against_vle_course_id(self):
-        (groups, count, _max) = search(q=self.course002, user=self.user)
+        (groups, count, _) = search(q=self.course002, user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course Two (Physics) - Group One (Group)',
@@ -269,7 +326,7 @@ class SearchGroupsTestCase(TestCase):
         """
         there are three groups entitled "Group One" of which Sansa Stark is in two
         """
-        (groups, count, _max) = search(q='Group One', user=self.user)
+        (groups, count, _) = search(q='Group One', user=self.user)
         self.assertEqual(2, count)
         self.assertDictEqual({
             'name': 'Course One (Maths) - Group One (Group)',
@@ -283,7 +340,7 @@ class SearchGroupsTestCase(TestCase):
         }, groups[1])
 
     def test_search_two_results_against_vle_group_id(self):
-        (groups, count, _max) = search(q=self.group001, user=self.user)
+        (groups, count, _) = search(q=self.group001, user=self.user)
         self.assertEqual(2, count)
         self.assertDictEqual({
             'name': 'Course One (Maths) - Group One (Group)',
@@ -297,21 +354,21 @@ class SearchGroupsTestCase(TestCase):
         }, groups[1])
 
     def test_search_many_results(self):
-        (groups, count, _max) = search(q='Group', user=self.admin)
+        (groups, count, _) = search(q='Group', user=self.admin)
         self.assertEqual(GroupKVStore.objects.count(), count)
 
     def test_search_result_count_exceeds_max(self):
-        (groups, count, _max) = search(q='Group', user=self.admin, _max=5)
+        (groups, count, per_page) = search(q='Group', user=self.admin, per_page=5)
         self.assertEqual(5, len(groups))
         self.assertEqual(GroupKVStore.objects.count(), count)
-        self.assertEqual(5, _max)
+        self.assertEqual(5, per_page)
 
     def test_search_with_single_exclude(self):
         g = {
             'id': delimiter.join([self.course001, self.group001]),
             'type': u'g'
         }
-        (groups, count, _max) = search(q='Group One', exclude=[g], user=self.user)
+        (groups, count, _) = search(q='Group One', exclude=[g], user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course Two (Physics) - Group One (Group)',
@@ -328,7 +385,7 @@ class SearchGroupsTestCase(TestCase):
             'id': delimiter.join([self.course002, self.group001]),
             'type': u'g'
         }
-        (groups, count, _max) = search(q='Group One', exclude=[g1, g2], user=self.admin)
+        (groups, count, _) = search(q='Group One', exclude=[g1, g2], user=self.admin)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course Three (Maths) - Group One (Group)',
@@ -381,17 +438,17 @@ class SearchCoursesTestCase(TestCase):
         list(map(lambda p: CourseMember.objects.create(user=self.user, vle_course_id=p), l))
 
     def test_search_no_results_against_name(self):
-        (courses, count, _max) = search(q='Chemistry', user=self.user)
+        (courses, count, _) = search(q='Chemistry', user=self.user)
         self.assertEqual(0, count)
         self.assertListEqual([], courses)
 
     def test_search_no_results_against_vle_course_id(self):
-        (courses, count, _max) = search(q=self.course003, user=self.user)
+        (courses, count, _) = search(q=self.course003, user=self.user)
         self.assertEqual(0, count)
         self.assertListEqual([], courses)
 
     def test_search_one_result_against_name(self):
-        (courses, count, _max) = search(q='Maths', user=self.user)
+        (courses, count, _) = search(q='Maths', user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course One (Maths) (Module)',
@@ -400,7 +457,7 @@ class SearchCoursesTestCase(TestCase):
         }, courses[0])
 
     def test_search_one_result_against_vle_course_id(self):
-        (courses, count, _max) = search(q=self.course002, user=self.user)
+        (courses, count, _) = search(q=self.course002, user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course Two (Physics) (Module)',
@@ -409,7 +466,7 @@ class SearchCoursesTestCase(TestCase):
         }, courses[0])
 
     def test_search_two_results_against_name(self):
-        (courses, count, _max) = search(q='Course', user=self.user)
+        (courses, count, _) = search(q='Course', user=self.user)
         self.assertEqual(2, count)
         self.assertDictEqual({
             'name': 'Course One (Maths) (Module)',
@@ -423,21 +480,21 @@ class SearchCoursesTestCase(TestCase):
         }, courses[1])
 
     def test_search_many_results(self):
-        (courses, count, _max) = search(q='Course', user=self.admin)
+        (courses, count, _) = search(q='Course', user=self.admin)
         self.assertEqual(CourseKVStore.objects.count(), count)
 
     def test_search_result_count_exceeds_max(self):
-        (courses, count, _max) = search(q='Course', user=self.admin, _max=2)
+        (courses, count, per_page) = search(q='Course', user=self.admin, per_page=2)
         self.assertEqual(2, len(courses))
         self.assertEqual(CourseKVStore.objects.count(), count)
-        self.assertEqual(2, _max)
+        self.assertEqual(2, per_page)
 
     def test_search_with_single_exclude(self):
         c = {
             'id': self.course001,
             'type': u'c'
         }
-        (courses, count, _max) = search(q='Course', exclude=[c], user=self.user)
+        (courses, count, _) = search(q='Course', exclude=[c], user=self.user)
         self.assertEqual(1, count)
         self.assertDictEqual({
             'name': 'Course Two (Physics) (Module)',
@@ -454,7 +511,7 @@ class SearchCoursesTestCase(TestCase):
             'id': self.course002,
             'type': u'c'
         }
-        (courses, count, _max) = search(q='Course', exclude=[c1, c2], user=self.user)
+        (courses, count, _) = search(q='Course', exclude=[c1, c2], user=self.user)
         self.assertEqual(0, count)
 
 

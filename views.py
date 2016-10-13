@@ -75,15 +75,16 @@ def search_recipient(request):
     data = json.loads(force_str(request.body))
     q = data.get('q', '')
     recipients = data.get('recipients', [])
+    page = data.get('page', 0)
 
     # get recipients, count and max number given a search query and a list of recipients to exclude
-    (recipients, count, _max) = search(q=q, exclude=recipients, user=request.user)
+    (recipients, count, per_page) = search(q=q, exclude=recipients, user=request.user, page=page)
 
     # JSON encode search results and return JSON response
     data = json.dumps({
         'searchResults': recipients,
         'count': count,
-        'max': _max
+        'perPage': per_page,
     })
     return HttpResponse(data, content_type='application/json')
 

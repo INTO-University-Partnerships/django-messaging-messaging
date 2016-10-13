@@ -66,7 +66,8 @@ app.controller('composeMessageCtrl', [
     '$scope', '$timeout', '$location', '$routeParams', 'genericSrv', 'messageSrv', 'CONFIG',
     function ($scope, $timeout, $location, $routeParams, genericSrv, messageSrv, config) {
         $scope.timeoutPromise = $scope.sendTo = $scope.sendToChoices = null;
-        $scope.sendToChoicesCount = $scope.sendToChoicesMax = 0;
+        $scope.currentPage = $scope.pageCount = $scope.sendToChoicesCount = 0;
+        $scope.pages = [];
         $scope.messages = messageSrv.collect();
         $scope.searching = false;
         $scope.minSearchChars = config.minSearchChars;
@@ -115,7 +116,8 @@ app.controller('composeMessageCtrl', [
                 $scope.searching = true;
                 d = {
                     q: $scope.sendTo,
-                    recipients: $scope.msg.recipients
+                    recipients: $scope.msg.recipients,
+                    page: $scope.currentPage
                 };
                 genericSrv.genericPost(Urls['messaging_api:search_recipient'](), d).
                     then(function (data) {
@@ -146,6 +148,7 @@ app.controller('composeMessageCtrl', [
         };
 
         $scope.addChoices = function (data) {
+            var j;
             $scope.sendToChoices = data.searchResults.filter(function (value) {
                 var i, count;
                 for (i = 0, count = $scope.msg.recipients.length; i < count; ++i) {
@@ -156,7 +159,11 @@ app.controller('composeMessageCtrl', [
                 return true;
             });
             $scope.sendToChoicesCount = data.count;
-            $scope.sendToChoicesMax = data.max;
+            $scope.pageCount = Math.ceil(data.count / data.perPage);
+            $scope.pages = [];
+            for (j = 1; j <= $scope.pageCount; ++j) {
+                $scope.pages.push(j);
+            }
         };
 
         $scope.removeChoice = function (choice) {
@@ -198,6 +205,39 @@ app.controller('composeMessageCtrl', [
         $scope.$on('$destroy', function () {
             $timeout.cancel($scope.timeoutPromise);
         });
+
+        $scope.prevPage = function () {
+            if ($scope.currentPage > 0) {
+                --$scope.currentPage;
+                $scope.searchRecipient();
+            }
+        };
+
+        $scope.prevPageDisabled = function () {
+            var disabled = $scope.currentPage === 0 ? 'disabled' : '';
+            return disabled;
+        };
+
+        $scope.nextPage = function () {
+            if ($scope.currentPage < $scope.pageCount - 1) {
+                $scope.currentPage++;
+                $scope.searchRecipient();
+            }
+        };
+
+        $scope.nextPageDisabled = function () {
+            var disabled = $scope.currentPage === $scope.pageCount - 1 ? 'disabled' : '';
+            return disabled;
+        };
+
+        $scope.pageDisabled = function (n) {
+            return $scope.currentPage === n;
+        };
+
+        $scope.gotoPage = function (n) {
+            $scope.currentPage = n;
+            $scope.searchRecipient();
+        };
     }
 ]);
 

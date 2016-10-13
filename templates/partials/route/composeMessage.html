@@ -40,10 +40,18 @@
                         <span>{% verbatim %}{{ choice.name }}{% endverbatim %}</span>
                     </a>
                 </div>
-                <span class="help-block" ng-show="!searching && sendToChoices && sendToChoicesCount > sendToChoicesMax">
-                    {% verbatim %}{{ sendToChoicesCount }}{% endverbatim %}&nbsp;{% trans 'possible recipients match' %}
-                    &ldquo;{% verbatim %}{{ sendTo }}{% endverbatim %}&rdquo;&period;
-                    {% trans 'Showing the first' %}&nbsp;{% verbatim %}{{ sendToChoicesMax }}{% endverbatim %}&period;
+                <span class="help-block" ng-show="!searching && sendToChoices && pageCount > 1">
+                    <ul class="pagination pagination-sm" style="margin: 0;">
+                        <li ng-class="prevPageDisabled() ? 'disabled' : ''">
+                            <a href="javascript:;" ng-click="prevPage()">&laquo;</a>
+                        </li>
+                        <li ng-class="pageDisabled(page - 1) ? 'active' : ''" ng-repeat="page in pages">
+                            <a href="javascript:;" ng-click="gotoPage(page - 1)">{% verbatim %}{{ page }}{% endverbatim %}</a>
+                        </li>
+                        <li ng-class="nextPageDisabled() ? 'disabled' : ''">
+                            <a href="javascript:;" ng-click="nextPage()">&raquo;</a>
+                        </li>
+                    </ul>
                 </span>
             </div>
         </div>
